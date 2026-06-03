@@ -1,0 +1,66 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+      - run: echo "BUILD_VERSION=${VERSION%-SNAPSHOT}" >> $GITHUB_ENV
+      - name: Build with Maven and publish package
+        run: |
+          echo $VERSION
+          echo $BUILD_VERSION
+          if [[ "$VERSION" == *SNAPSHOT ]]; then
+            git config --global user.email "info@example.com"
+            git config --global user.name "Maven Release Plugin"
+          
+            mvn -B clean release:prepare release:perform -Prelease -DreleaseVersion=$BUILD_VERSION -Dresume=false -DautoVersionSubmodules=true -DdryRun=false -Dmaven.test.skip=true -DskipITs -DscmCommentPrefix="[maven-release-plugin][ci skip] " -Djdk.net.URLClassPath.disableClassPathURLCheck=true
+          else
+            echo "Version is not valid, failing the workflow."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo "ARTIFACT_JAR_FILE=$(ls oc-sso-query/target/*.jar | xargs basename)" >> $GITHUB_ENV
+      - run: echo "ARTIFACT_FILE_NAME=$(ls oc-sso-query/target/*.jar | xargs basename | sed 's/\.[^.]*$//')" >> $GITHUB_ENV
+      - run: echo "ARTIFACT_PATH=$(ls oc-sso-query/target/*.jar)" >> $GITHUB_ENV
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_FILE_NAME }}
+          path: ${{ env.ARTIFACT_PATH }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.BUILD_VERSION }}
+          release_name: Release ${{ env.BUILD_VERSION }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.ARTIFACT_PATH }}
+          asset_name: ${{ env.ARTIFACT_JAR_FILE }}
+          asset_content_type: application/zip

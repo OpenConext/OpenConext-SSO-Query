@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>1.4</version>
+    </skin>
+    <body>
+        <menu ref="parent"/>
+        <menu name="Release Notes">
+            <item name="Release Notes ${version}" href="/docs/${version}/release-notes.html"/>
+            <item name="All Release Notes" href="/release-notes-all.html"/>
+        </menu>
+        <menu name="Installation instructions">
+            <item name="Initial set-up" href="/docs/installation-manual.html"/>
+            <item name="Deployment" href="/docs/deployment.html"/>
+        </menu>
+        <menu ref="reports"/>
+    </body>
+</project>

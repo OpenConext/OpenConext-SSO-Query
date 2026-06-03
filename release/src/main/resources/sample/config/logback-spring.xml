@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
+    <include resource="co/elastic/logging/logback/boot/ecs-file-appender.xml" />
+
+    <springProperty scope="context" name="serverName" source="HOSTNAME" />
+
+    <appender name="EVENTLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/oc-sso-query-eventlog.log</file>
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_PATH}/oc-sso-query-eventlog.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 30 days' worth of history capped at 1GB total size -->
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Disable field names to match the log pattern of the hub -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <version>[ignore]</version>
+                <thread>[ignore]</thread>
+                <logger>[ignore]</logger>
+                <level>[ignore]</level>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ECS_JSON_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <logger name="oc-sso-query-eventlogger" level="info" additivity="false">
+        <appender-ref ref="EVENTLOG" />
+    </logger>
+
+</configuration>

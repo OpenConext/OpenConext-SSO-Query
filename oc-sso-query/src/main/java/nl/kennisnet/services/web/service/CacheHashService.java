@@ -1,0 +1,84 @@
+/*
+ * Copyright 2021, Stichting Kennisnet
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package nl.kennisnet.services.web.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+
+@Service
+public class CacheHashService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CacheHashService.class);
+
+    @Value("${api.key.header.key}")
+    private String apiHeader;
+
+    @Value("${api.key.header.value}")
+    private String apiKeyHeaderValue;
+
+    @Value("${api.cacheHash.url}")
+    private String cacheHashEndpoint;
+
+    private final RestTemplate restTemplate;
+
+    public CacheHashService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public String fetchCacheHash() {
+        if (!StringUtils.hasText(cacheHashEndpoint)) {
+            return LocalDateTime.now().toString();
+        }
+
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add(apiHeader, apiKeyHeaderValue);
+
+        HttpEntity<?> httpEntity = new HttpEntity<>(requestHeaders);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(cacheHashEndpoint, HttpMethod.GET, httpEntity,
+                    new ParameterizedTypeReference<>() {});
+
+            String result = response.getBody();
+            if (null == result) {
+                LOGGER.warn("Received null from data-services cache-hash");
+                return "";
+            }
+
+            return result;
+        } catch (HttpStatusCodeException htsce) {
+            LOGGER.error("Unexpected response received: " + htsce.getMessage());
+            return "";
+        } catch (RestClientException rce) {
+            LOGGER.error("Communication error occurred: " + rce.getMessage());
+            return "";
+        }
+    }
+
+}

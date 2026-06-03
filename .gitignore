@@ -1,0 +1,5 @@
+/.idea
+*.iml
+*/target
+/logs
+/release/src/main/resources/dev

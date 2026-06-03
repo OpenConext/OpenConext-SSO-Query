@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021, Stichting Kennisnet
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>nl.kennisnet.services</groupId>
+    <artifactId>oc-sso-query-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>2.5.0-SNAPSHOT</version>
+    <modules>
+        <module>oc-sso-query</module>
+        <module>release</module>
+    </modules>
+
+    <name>OC SSO Query</name>
+    <description>OC SSO Query as a separate Service.</description>
+
+    <scm>
+        <url>https://github.com/OpenConext/OpenConext-SSO-Query</url>
+        <developerConnection>scm:git:https://github.com/OpenConext/OpenConext-SSO-Query.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <inceptionYear>2016</inceptionYear>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
+        <jacoco.version>0.8.13</jacoco.version>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
+        <event-logger.version>1.0.0</event-logger.version>
+        <guava.version>33.1.0-jre</guava.version>
+        <json.version>20240303</json.version>
+        <logback-ecs-encoder.version>1.7.0</logback-ecs-encoder.version>
+        <logback.encoder.version>7.4</logback.encoder.version>
+        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+        <maven-scm.version>1.11.2</maven-scm.version>
+        <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version> <!-- Temporary fix for CVE-2025-48924 -->
+    </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/OpenConext/OpenConext-SSO-Query</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>merge</goal>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet implementation="org.apache.maven.shared.model.fileset.FileSet">
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
+                <configuration>
+                    <releaseProfiles>release</releaseProfiles>
+                    <remoteTagging>true</remoteTagging>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>${maven-scm.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-api</artifactId>
+                        <version>${maven-scm.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>security-updates</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${dependency-check-maven.version}</version>
+                        <configuration>
+                            <format>ALL</format>
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <suppressionFile>release/src/suppressions/ignore.xml</suppressionFile>
+                            <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <organization>
+        <name>Stichting Kennisnet</name>
+        <url>https://www.kennisnet.nl</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>beekman01</id>
+            <name>Thomas Beekman</name>
+            <organization>Stichting Kennisnet</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <email>T.Beekman@kennisnet.nl</email>
+        </developer>
+        <developer>
+            <id>kok01</id>
+            <name>Stephan Kok</name>
+            <organization>Stichting Kennisnet</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <email>S.Kok@kennisnet.nl</email>
+        </developer>
+    </developers>
+
+    <contributors>
+        <contributor>
+            <name>Aram Mutlu</name>
+            <organization>Stichting Kennisnet</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <email>A.Mutlu@kennisnet.nl</email>
+        </contributor>
+        <contributor>
+            <name>Vincent Jong</name>
+            <organization>Stichting Kennisnet</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <email>V.Jong@kennisnet.nl</email>
+        </contributor>
+        <contributor>
+            <name>Tim Poot</name>
+            <organization>Stichting Kennisnet</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <email>T.Poot@kennisnet.nl</email>
+        </contributor>
+    </contributors>
+
+</project>
