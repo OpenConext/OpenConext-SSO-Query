@@ -21,10 +21,10 @@ import nl.kennisnet.services.web.service.WhitelistRestProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,17 +37,14 @@ import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ExtendWith(MockitoExtension.class)
 public class SsoQueryControllerTest {
 
     public static final String SSO_COOKIE_NAME = "sso_id";
+
     private MockMvc mvc;
 
     private static final String SSO_QUERY_URL = "/sso/ssoquery";
-
-    @InjectMocks
-    private SsoQueryController controller;
 
     @Mock
     private WhitelistRestProvider whitelistProvider;
@@ -55,15 +52,19 @@ public class SsoQueryControllerTest {
     @Mock
     private CacheConfig cacheConfig;
 
+    @InjectMocks
+    private SsoQueryController ssoQueryController;
+
     @BeforeEach
     public void setUp() {
-        this.mvc = MockMvcBuilders.standaloneSetup(controller).build();
-        when(whitelistProvider.getWhitelist())
-                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+        this.mvc = MockMvcBuilders.standaloneSetup(ssoQueryController).build();
     }
 
     @Test
     public void testDataFetchError() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl"));
 
@@ -90,16 +91,25 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testJsonFormat() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         testJsonResponse("JSON");
     }
 
     @Test
     public void testJsonCaseInsensitiveFormat() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         testJsonResponse("json");
     }
 
     @Test
     public void testNoFormat() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl"))
                 .andExpect(status().isFound())
@@ -108,6 +118,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testNotJsonFormat() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param(SsoQueryController.PARAM_FORMAT, "text")
                 .param("response_url", "https://testapplicatie.kennisnet.nl"))
                 .andExpect(status().isFound())
@@ -116,7 +129,10 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testWildcardWithDashURL() throws Exception {
-        ReflectionTestUtils.setField(controller, "wildcardEnabled", true);
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
+        ReflectionTestUtils.setField(ssoQueryController, "wildcardEnabled", true);
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param(SsoQueryController.PARAM_FORMAT, "text")
                 .param("response_url", "https://test-applicatie.kennisnet.nl"))
                 .andExpect(status().isFound())
@@ -140,6 +156,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testWithoutQueryParameters() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl"))
                 .andExpect(status().isFound())
@@ -154,7 +173,10 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testFirstDomainWildCardRedirectUrl() throws Exception {
-        ReflectionTestUtils.setField(controller, "wildcardEnabled", true);
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
+        ReflectionTestUtils.setField(ssoQueryController, "wildcardEnabled", true);
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param("response_url", "https://test.kennisnet.nl"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("https://test.kennisnet.nl?result=false"));
@@ -162,7 +184,10 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testWhitelistedSubSubDomainRedirectUrl() throws Exception {
-        ReflectionTestUtils.setField(controller, "wildcardEnabled", true);
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
+        ReflectionTestUtils.setField(ssoQueryController, "wildcardEnabled", true);
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param("response_url", "https://test.test.kennisnet.nl"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("https://test.test.kennisnet.nl?result=false"));
@@ -170,20 +195,23 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testWhitelistInvalidWildcardUseRedirectUrl() throws Exception {
-        ReflectionTestUtils.setField(controller, "wildcardEnabled", true);
+        ReflectionTestUtils.setField(ssoQueryController, "wildcardEnabled", true);
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param("response_url", "https://akennisnet.nl"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void testBlacklistedFirstDomainWildCardRedirectUrl() throws Exception {
-        ReflectionTestUtils.setField(controller, "wildcardEnabled", true);
+        ReflectionTestUtils.setField(ssoQueryController, "wildcardEnabled", true);
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL).param("response_url", "https://test.test.nl"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void testEmptySessionCookie() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl")
                 .cookie(new Cookie("oa_sso_id", StringUtils.EMPTY)))
@@ -193,6 +221,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testNotEmptySessionCookie() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl")
                         .cookie(new Cookie(SSO_COOKIE_NAME, "test")))
@@ -202,6 +233,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testQueryParametersInUrl() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl?test=1&test2=3")
                         .cookie(new Cookie(SSO_COOKIE_NAME, "test")))
@@ -211,6 +245,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testEmptyNotificationCookie() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl")
                 .cookie(new Cookie("ssonot", StringUtils.EMPTY)))
@@ -220,6 +257,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testNotEmptyNotificationCookie() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", "https://testapplicatie.kennisnet.nl")
                 .cookie(new Cookie("ssonot", "test")))
@@ -229,6 +269,9 @@ public class SsoQueryControllerTest {
 
     @Test
     public void testHeaderIsSet() throws Exception {
+        when(whitelistProvider.getWhitelist())
+                .thenReturn(Lists.newArrayList("https://testapplicatie.kennisnet.nl", "https://*.kennisnet.nl"));
+
         String origin = "https://testapplicatie.kennisnet.nl";
         mvc.perform(MockMvcRequestBuilders.get(SSO_QUERY_URL)
                 .param("response_url", origin)

@@ -3,7 +3,7 @@
 The OC SSO Query Service uses:
 
 - OpenJDK 21
-- Spring Boot 3
+- Spring Boot 4
 
 ## OpenJDK 21
 

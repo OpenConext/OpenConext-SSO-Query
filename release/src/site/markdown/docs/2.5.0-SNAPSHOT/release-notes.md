@@ -9,11 +9,10 @@
 | Delivery type              | Full release                 |
 
 ## Changes
-<!-- Please note only the stories should be added. -->
 
-| #        | Description                                                    |
-|:---------|:---------------------------------------------------------------|
-| ENT-XXXX |                                                                |
+| #        | Description                   |
+|:---------|:------------------------------|
+| ENT-5461 | Build release SSO Query 2.5.0 |
 
 
 ## Configuration changes

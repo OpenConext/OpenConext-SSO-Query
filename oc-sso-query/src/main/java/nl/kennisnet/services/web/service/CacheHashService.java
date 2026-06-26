@@ -18,18 +18,12 @@ package nl.kennisnet.services.web.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
-import java.time.LocalDateTime;
 
 @Service
 public class CacheHashService {
@@ -37,7 +31,7 @@ public class CacheHashService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheHashService.class);
 
     @Value("${api.key.header.key}")
-    private String apiHeader;
+    private String API_KEY_HEADER;
 
     @Value("${api.key.header.value}")
     private String apiKeyHeaderValue;
@@ -45,27 +39,30 @@ public class CacheHashService {
     @Value("${api.cacheHash.url}")
     private String cacheHashEndpoint;
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public CacheHashService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public CacheHashService(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     public String fetchCacheHash() {
-        if (!StringUtils.hasText(cacheHashEndpoint)) {
-            return LocalDateTime.now().toString();
+        if (null == cacheHashEndpoint) {
+            LOGGER.info("Cache hash endpoint not set, returning empty hash");
+            return "";
         }
 
         HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.add(apiHeader, apiKeyHeaderValue);
+        requestHeaders.add(API_KEY_HEADER, apiKeyHeaderValue);
 
         HttpEntity<?> httpEntity = new HttpEntity<>(requestHeaders);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(cacheHashEndpoint, HttpMethod.GET, httpEntity,
-                    new ParameterizedTypeReference<>() {});
+            String result = restClient.get()
+                    .uri(cacheHashEndpoint)
+                    .headers(headers -> headers.addAll(httpEntity.getHeaders()))
+                    .retrieve()
+                    .body(String.class);
 
-            String result = response.getBody();
             if (null == result) {
                 LOGGER.warn("Received null from data-services cache-hash");
                 return "";

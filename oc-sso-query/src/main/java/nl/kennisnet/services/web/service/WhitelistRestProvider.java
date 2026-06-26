@@ -26,13 +26,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,10 +69,10 @@ public class WhitelistRestProvider {
     @Value("${data.location}")
     private Resource dataLocation;
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public WhitelistRestProvider(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public WhitelistRestProvider(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     /**
@@ -106,10 +104,11 @@ public class WhitelistRestProvider {
         HttpEntity<?> httpEntity = new HttpEntity<>(requestHeaders);
 
         try {
-            ResponseEntity<List<String>> response = restTemplate.exchange(endpointUrl, HttpMethod.GET,
-                    httpEntity, new ParameterizedTypeReference<>() {
-                    });
-            return response.getBody();
+            return restClient.get()
+                    .uri(endpointUrl)
+                    .headers(headers -> headers.addAll(httpEntity.getHeaders()))
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<String>>() {});
         } catch (HttpStatusCodeException htsce) {
             LOGGER.error("Unexpected response received: " + htsce.getMessage());
             return new ArrayList<>();

@@ -15,50 +15,51 @@
  */
 package nl.kennisnet.services.web.service;
 
-import com.google.common.io.Resources;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import java.util.List;
 
-@RestClientTest(WhitelistRestProvider.class)
-@TestPropertySource(locations = "classpath:application.properties")
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
 public class WhitelistRestProviderTest {
 
-    @Autowired
-    private WhitelistRestProvider provider;
+    @Mock
+    private RestClient restClient;
 
-    @Autowired
-    private MockRestServiceServer server;
+    private WhitelistRestProvider whitelistRestProvider;
 
-    @Autowired
-    private ResourceLoader resourceLoader;
+    private Resource restResource;
 
     @Value("${api.endpoint.url}")
     private String url;
 
+    @BeforeEach
+    void setUp() {
+        whitelistRestProvider = new WhitelistRestProvider(restClient);
+
+        restResource = new ClassPathResource("rest_response.json");
+
+        ReflectionTestUtils.setField(whitelistRestProvider, "dataLocation", restResource);
+
+    }
+
     @Test
-    public void getWhitelistTest() throws Exception {
-        Resource resource = resourceLoader.getResource("rest_response.json");
-        this.server.expect(requestTo(url))
-                .andRespond(withSuccess(Resources.toString(resource.getURL(), StandardCharsets.UTF_8),
-                            MediaType.APPLICATION_JSON));
-        List<String> whiteList = provider.getWhitelist();
+    public void getWhitelistTest() {
+        List<String> whiteList = whitelistRestProvider.getWhitelist();
         assertNotNull(whiteList);
         assertEquals(3, whiteList.size());
         assertTrue(whiteList.contains("https://testapplicatie.vm.openconext.org"));
@@ -68,16 +69,16 @@ public class WhitelistRestProviderTest {
 
     @Test
     public void getEmptyListOnStatusCodeExceptionTest() {
-        this.server.expect(requestTo(url)).andRespond(withBadRequest());
-        assertTrue(provider.getWhitelist().isEmpty());
+        ReflectionTestUtils.setField(whitelistRestProvider, "endpointUrl", "http://localhost:3000/api/sso-query/all");
+        when(restClient.get()).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
+        assertTrue(whitelistRestProvider.getWhitelist().isEmpty());
     }
 
     @Test
     public void getEmptyListOnRestClientExceptionTest() {
-        this.server.expect(requestTo(url)).andRespond(clientHttpRequest -> {
-            throw new RestClientException("");
-        });
-        assertTrue(provider.getWhitelist().isEmpty());
+        ReflectionTestUtils.setField(whitelistRestProvider, "endpointUrl", "http://localhost:3000/api/sso-query/all");
+        when(restClient.get()).thenThrow(new RestClientException(""));
+        assertTrue(whitelistRestProvider.getWhitelist().isEmpty());
     }
 
 }
