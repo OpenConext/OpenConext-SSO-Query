@@ -54,11 +54,10 @@
         <guava.version>33.1.0-jre</guava.version>
         <json.version>20240303</json.version>
         <logback-ecs-encoder.version>1.7.0</logback-ecs-encoder.version>
-        <logback.encoder.version>7.4</logback.encoder.version>
+        <logback.encoder.version>9.0</logback.encoder.version>
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-scm.version>1.11.2</maven-scm.version>
         <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
-<!--        <commons-lang3.version>3.18.0</commons-lang3.version> &lt;!&ndash; Temporary fix for CVE-2025-48924 &ndash;&gt;-->
     </properties>
 
     <distributionManagement>

@@ -31,7 +31,7 @@
     <properties>
         <!-- A list of all the previous versions in reverse order, separated by a comma separator -->
         <!-- The current version is automatically added in the release-notes-all overview. -->
-        <versions>2.5.0-SNAPSHOT</versions>
+        <versions>2.5.0</versions>
         <maven.deploy.skip>false</maven.deploy.skip>
     </properties>
 
