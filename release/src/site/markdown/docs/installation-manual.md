@@ -2,12 +2,12 @@
 
 The OC SSO Query Service uses:
 
-- OpenJDK 21
+- OpenJDK 25
 - Spring Boot 4
 
-## OpenJDK 21
+## OpenJDK 25
 
-The version of Java used is OpenJDK 21.x.
+The version of Java used is OpenJDK 25.x.
 
 ### Environment specific configuration files
 
