@@ -59,6 +59,7 @@
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-scm.version>1.11.2</maven-scm.version>
         <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
+        <freemarker.version>2.3.35</freemarker.version> <!-- Temporary fix for CVE-2026-84939 -->
         <tomcat.version>11.0.25</tomcat.version> <!-- Temporary fix for CVE-2026-65183(8.1), CVE-2026-65905(9.8), CVE-2026-66422(8.1), CVE-2026-68525(9.1), CVE-2026-68569(8.1), CVE-2026-65182(9.1), CVE-2026-65637(9.8) -->
     </properties>
 
